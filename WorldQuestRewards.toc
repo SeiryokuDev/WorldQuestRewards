@@ -1,0 +1,14 @@
+## Interface: 120001
+## Title: WorldQuestRewards
+## Notes: Lists World Quests that offer a specific reward.
+## Author: Seiryoku
+## Version: 1.0.0
+## X-Curse-Project-ID: 999999
+## SavedVariables: WQRDB
+
+Init.lua
+Settings.lua
+Scanner.lua
+Display.lua
+Cache.lua
+Integrations.lua
