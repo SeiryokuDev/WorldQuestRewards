@@ -526,6 +526,7 @@ function WQR:BuildCachedQuestOptions(questID, questInfo, questName)
                 type = "input",
                 name = "Map ID",
                 desc = "The uiMapID containing the quest location.",
+                width = "full",
                 get = function()
                     local position = questInfo.position
 
@@ -552,6 +553,7 @@ function WQR:BuildCachedQuestOptions(questID, questInfo, questName)
                 type = "input",
                 name = "X",
                 desc = "X coordinate as a percentage of the map.",
+                width = "half",
                 get = function()
                     local position = questInfo.position
 
@@ -578,6 +580,7 @@ function WQR:BuildCachedQuestOptions(questID, questInfo, questName)
                 type = "input",
                 name = "Y",
                 desc = "Y coordinate as a percentage of the map.",
+                width = "half",
                 get = function()
                     local position = questInfo.position
 
