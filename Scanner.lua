@@ -35,7 +35,9 @@ function WQR:UpdateWorldQuestData()
     self.data = data
     self:UpdateDisplay()
     if self.config.debug then
-        DevTool:AddData(data, "WQR data")
+        if C_AddOns.IsAddOnLoaded("DevTool") then
+            DevTool:AddData(data, "WQR data")
+        end
     end
 end
 

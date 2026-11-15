@@ -29,14 +29,14 @@ function WQR:OnZoneChanged()
         end
     end
 
-    if TomTom then
+    if C_AddOns.IsAddOnLoaded("TomTom") then
         self:ClearRemovedWaypoints()
         TomTom:SetClosestWaypoint(false)
     end
 end
 
 function WQR:LoadRematchTeam(questID)
-    if not Rematch or not RematchSettings then return end
+    if not C_AddOns.IsAddOnLoaded("Rematch") or not C_AddOns.IsAddOnLoaded("RematchSettings") then return end
     if not self:QuestIsPetBattle(questID) then return end
 
     local cache = self.db.global.questCache
@@ -73,7 +73,7 @@ function WQR:LoadRematchTeam(questID)
 end
 
 function WQR:AddWaypoint(questID)
-    if not TomTom then return end
+    if not C_AddOns.IsAddOnLoaded("TomTom") then return end
 
     local cache = self.db.global.questCache
     local questInfo = cache[questID]
@@ -94,7 +94,7 @@ function WQR:AddWaypoint(questID)
 end
 
 function WQR:RemoveWaypoint(questID)
-    if not questID or not TomTom then return end
+    if not questID or not C_AddOns.IsAddOnLoaded("TomTom") then return end
 
     local cache = self.db.global.questCache
     local questInfo = cache[questID]
@@ -112,7 +112,7 @@ function WQR:RemoveWaypoint(questID)
 end
 
 function WQR:ClearRemovedWaypoints()
-    if not TomTom then return end
+    if not C_AddOns.IsAddOnLoaded("TomTom") then return end
 
     local cache = self.db.global.questCache
     for _, questInfo in pairs(cache) do
