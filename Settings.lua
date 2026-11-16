@@ -259,7 +259,8 @@ function WQR:AddIntegrationOptions()
         args.rematch = {
             type = "toggle",
             name = "Enable Rematch integration",
-            desc = "Automatically load pet battle teams when entering a zone with a known pet battle world quest. Note: this requires you to have completed the tracked world quest at least once with this addon enabled.",
+            desc =
+            "Automatically load pet battle teams when entering a zone with a known pet battle world quest. Note: this requires you to have completed the tracked world quest at least once with this addon enabled.",
             order = 21,
             get = function() return WQR.db.profile.rematch end,
             set = function(_, val)
@@ -273,11 +274,18 @@ function WQR:AddIntegrationOptions()
         args.tomtom = {
             type = "toggle",
             name = "Enable TomTom integration",
-            desc = "Automatically add a TomTom waypoint when entering a zone with a tracked world quest. Note: this requires you to have completed the tracked world quest at least once with this addon enabled.",
+            desc =
+            "Automatically add a TomTom waypoint when entering a zone with a tracked world quest. Note: this requires you to have completed the tracked world quest at least once with this addon enabled.",
             order = 22,
             get = function() return WQR.db.profile.tomtom end,
             set = function(_, val)
                 WQR.db.profile.tomtom = val
+
+                if not val then
+                    WQR:RemoveAllWaypoints()
+                else
+                    WQR:HandleTomTom()
+                end
             end,
         }
     end
@@ -328,7 +336,9 @@ function WQR:AddExpansionOptions()
             set = function(_, val)
                 WQR.db.profile.expansions[expansionIndex] = val
                 WQR:PopulateZoneList()
-                WQR:UpdateWorldQuestData()
+                WQR:UpdateWorldQuestData(true)
+                WQR:RemoveUntrackedWaypoints()
+                WQR:HandleTomTom()
             end,
         }
     end
@@ -390,7 +400,9 @@ function WQR:RebuildRewardFilterOptions()
                     set = function(_, val)
                         reward.id = val
                         WQR:ResolveRewardName(reward)
-                        WQR:UpdateWorldQuestData()
+                        WQR:UpdateWorldQuestData(true)
+                        WQR:RemoveUntrackedWaypoints()
+                        WQR:HandleTomTom()
                         WQR.AceConfigRegistry:NotifyChange(ADDON_NAME)
                     end,
                     order = 2,
@@ -407,7 +419,9 @@ function WQR:RebuildRewardFilterOptions()
                     get = function() return reward.minAmount or 0 end,
                     set = function(_, val)
                         reward.minAmount = val
-                        WQR:UpdateWorldQuestData()
+                        WQR:UpdateWorldQuestData(true)
+                        WQR:RemoveUntrackedWaypoints()
+                        WQR:HandleTomTom()
                     end,
                     order = 3,
                 },
@@ -419,7 +433,9 @@ function WQR:RebuildRewardFilterOptions()
                     get = function() return reward.enabled end,
                     set = function(_, val)
                         reward.enabled = val
-                        WQR:UpdateWorldQuestData()
+                        WQR:UpdateWorldQuestData(true)
+                        WQR:RemoveUntrackedWaypoints()
+                        WQR:HandleTomTom()
                     end,
                     order = 4,
                 },
@@ -431,7 +447,9 @@ function WQR:RebuildRewardFilterOptions()
                     confirmText = "Remove this reward filter?",
                     func = function()
                         table.remove(WQR.db.profile.rewards, rewardIndex)
-                        WQR:UpdateWorldQuestData()
+                        WQR:UpdateWorldQuestData(true)
+                        WQR:RemoveUntrackedWaypoints()
+                        WQR:HandleTomTom()
                         WQR:RebuildRewardFilterOptions()
                         WQR.AceConfigRegistry:NotifyChange(ADDON_NAME)
                     end,

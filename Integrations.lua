@@ -21,11 +21,29 @@ function WQR:OnZoneChanged()
         self.zoneUpdateTimer = nil
 
         self:UpdateWorldQuestData()
-        self:HandleIntegrations()
+        self:HandleTomTom()
+        self:HandleRematch()
     end)
 end
 
-function WQR:HandleIntegrations()
+function WQR:HandleTomTom()
+    self:ClearRemovedWaypoints()
+
+    local activeTasks = self:ActiveTasksInCurrentMap()
+    if not activeTasks then return end
+
+    if self.config.displayEnabled then
+        for _, questID in pairs(activeTasks) do
+            if self.config.tomtom then
+                self:AddWaypoint(questID)
+            end
+        end
+    end
+
+    self:SetClosestWaypoint()
+end
+
+function WQR:HandleRematch()
     local activeTasks = self:ActiveTasksInCurrentMap()
     if not activeTasks then return end
 
@@ -34,16 +52,7 @@ function WQR:HandleIntegrations()
             if self.config.rematch then
                 self:LoadRematchTeam(questID)
             end
-
-            if self.config.tomtom then
-                self:AddWaypoint(questID)
-            end
         end
-    end
-
-    if C_AddOns.IsAddOnLoaded("TomTom") then
-        self:ClearRemovedWaypoints()
-        TomTom:SetClosestWaypoint(false)
     end
 end
 
@@ -119,6 +128,51 @@ function WQR:RemoveWaypoint(questID)
             self:Error("Failed to remove waypoint")
         else
             questInfo.waypoint = nil
+        end
+    end
+end
+
+function WQR:RemoveAllWaypoints()
+    if not C_AddOns.IsAddOnLoaded("TomTom") then return end
+
+    local cache = self.db.global.questCache
+
+    for questID, questInfo in pairs(cache) do
+        if questInfo and questInfo.waypoint then
+            self:RemoveWaypoint(questID)
+        end
+    end
+end
+
+function WQR:SetClosestWaypoint()
+    if not C_AddOns.IsAddOnLoaded("TomTom") then return end
+
+    TomTom:SetClosestWaypoint(false)
+end
+
+function WQR:RemoveUntrackedWaypoints()
+    if not C_AddOns.IsAddOnLoaded("TomTom") then return end
+
+    local cache = self.db.global.questCache
+
+    for questID, questInfo in pairs(cache) do
+        if questInfo and questInfo.waypoint then
+            local isTracked = false
+
+            for _, maps in pairs(self.data) do
+                for _, quests in pairs(maps) do
+                    if quests[questID] then
+                        isTracked = true
+                        break
+                    end
+                end
+
+                if isTracked then break end
+            end
+
+            if not isTracked then
+                self:RemoveWaypoint(questID)
+            end
         end
     end
 end

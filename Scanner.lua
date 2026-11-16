@@ -19,7 +19,7 @@ local function InitQuestTable(data, continentID, mapID, questID)
     return quest
 end
 
-function WQR:UpdateWorldQuestData()
+function WQR:UpdateWorldQuestData(forceRefresh)
     local data = {}
     local seen = {}
 
@@ -47,24 +47,26 @@ function WQR:UpdateWorldQuestData()
 
     -- Preserve previous data for discovered quests
     -- that could not be tracked during this scan.
-    for continentID, maps in pairs(self.data or {}) do
-        for mapID, quests in pairs(maps) do
-            for questID, rewards in pairs(quests) do
-                if seen[questID] then
-                    local newRewards = data[continentID]
-                        and data[continentID][mapID]
-                        and data[continentID][mapID][questID]
+    if not forceRefresh then
+        for continentID, maps in pairs(self.data or {}) do
+            for mapID, quests in pairs(maps) do
+                for questID, rewards in pairs(quests) do
+                    if seen[questID] then
+                        local newRewards = data[continentID]
+                            and data[continentID][mapID]
+                            and data[continentID][mapID][questID]
 
-                    if not newRewards then
-                        local questMap = InitQuestTable(
-                            data,
-                            continentID,
-                            mapID,
-                            questID
-                        )
+                        if not newRewards then
+                            local questMap = InitQuestTable(
+                                data,
+                                continentID,
+                                mapID,
+                                questID
+                            )
 
-                        for rewardID, reward in pairs(rewards) do
-                            questMap[rewardID] = reward
+                            for rewardID, reward in pairs(rewards) do
+                                questMap[rewardID] = reward
+                            end
                         end
                     end
                 end
