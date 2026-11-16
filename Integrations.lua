@@ -13,7 +13,19 @@ Rematch = Rematch or {}
 RematchSettings = RematchSettings or {}
 
 function WQR:OnZoneChanged()
-    self:UpdateWorldQuestData()
+    if self.zoneUpdateTimer then
+        self.zoneUpdateTimer:Cancel()
+    end
+
+    self.zoneUpdateTimer = C_Timer.NewTimer(0.5, function()
+        self.zoneUpdateTimer = nil
+
+        self:UpdateWorldQuestData()
+        self:HandleIntegrations()
+    end)
+end
+
+function WQR:HandleIntegrations()
     local activeTasks = self:ActiveTasksInCurrentMap()
     if not activeTasks then return end
 

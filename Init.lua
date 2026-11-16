@@ -1,12 +1,12 @@
 local ADDON_NAME, addonTable = ...
 
 ---@class table
-local WQR = addonTable
+local WQR                    = addonTable
 
-local AceAddon        = LibStub("AceAddon-3.0")
+local AceAddon               = LibStub("AceAddon-3.0")
 
-_G.WQR                = WQR
-WQR.ADDON_NAME_PRINT  = "[" .. WrapTextInColorCode(ADDON_NAME, "ffE6CC80") .. "]"
+_G.WQR                       = WQR
+WQR.ADDON_NAME_PRINT         = "[" .. WrapTextInColorCode(ADDON_NAME, "ffE6CC80") .. "]"
 
 ---Print standard message, can override verbose setting with "force"
 ---@param text string
@@ -131,6 +131,8 @@ function WQR:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("WQRDB", self.defaults, true)
     self.config = self.db.profile
 
+    MigrateQuestCacheIfNeeded()
+
     self:RegisterChatCommand("worldquestrewards", "HandleSlash")
     self:RegisterChatCommand("wqr", "HandleSlash")
 
@@ -148,8 +150,8 @@ end
 -- --------------------------------------------------
 
 function WQR:OnEnable()
-    self:RegisterEvent("PLAYER_ENTERING_WORLD", "UpdateWorldQuestData")
-    self:RegisterEvent("QUEST_LOG_UPDATE", "UpdateWorldQuestData")
+    self:RegisterEvent("PLAYER_ENTERING_WORLD", "ScheduleWorldQuestUpdate")
+    self:RegisterEvent("QUEST_LOG_UPDATE", "ScheduleWorldQuestUpdate")
     self:RegisterEvent("PLAYER_TARGET_CHANGED", "GetLastTargetedNPC")
     self:RegisterEvent("QUEST_TURNED_IN", function(_, questID)
         if questID then
@@ -157,24 +159,29 @@ function WQR:OnEnable()
             self:RemoveWaypoint(questID)
         end
     end)
-    self:RegisterEvent("ZONE_CHANGED", function()
-        self:OnZoneChanged()
-        self:UpdateDisplay()
-    end)
-    self:RegisterEvent("ZONE_CHANGED_NEW_AREA", function()
-        self:OnZoneChanged()
-        self:UpdateDisplay()
-    end)
+    self:RegisterEvent("ZONE_CHANGED", "OnZoneChanged")
+    self:RegisterEvent("ZONE_CHANGED_NEW_AREA", "OnZoneChanged")
 
     self:CreateDisplay()
     self:ToggleDisplay(self.config.displayEnabled)
-    self:UpdateWorldQuestData()
+    self:ScheduleWorldQuestUpdate()
 
     self:Message("enabled")
 end
 
 function WQR:OnDisable()
     self:UnregisterAllEvents()
+
+    if self.updateTimer then
+        self.updateTimer:Cancel()
+        self.updateTimer = nil
+    end
+
+    if self.zoneUpdateTimer then
+        self.zoneUpdateTimer:Cancel()
+        self.zoneUpdateTimer = nil
+    end
+
     self:ToggleDisplay(false)
 
     self:Message("disabled")

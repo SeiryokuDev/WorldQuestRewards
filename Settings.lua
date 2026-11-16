@@ -259,7 +259,7 @@ function WQR:AddIntegrationOptions()
         args.rematch = {
             type = "toggle",
             name = "Enable Rematch integration",
-            desc = "Automatically load pet battle teams when entering a zone with a known pet battle world quest",
+            desc = "Automatically load pet battle teams when entering a zone with a known pet battle world quest. Note: this requires you to have completed the tracked world quest at least once with this addon enabled.",
             order = 21,
             get = function() return WQR.db.profile.rematch end,
             set = function(_, val)
@@ -273,7 +273,7 @@ function WQR:AddIntegrationOptions()
         args.tomtom = {
             type = "toggle",
             name = "Enable TomTom integration",
-            desc = "Automatically add a TomTom waypoint when entering a zone with a tracked world quest",
+            desc = "Automatically add a TomTom waypoint when entering a zone with a tracked world quest. Note: this requires you to have completed the tracked world quest at least once with this addon enabled.",
             order = 22,
             get = function() return WQR.db.profile.tomtom end,
             set = function(_, val)
@@ -314,17 +314,19 @@ function WQR:AddExpansionOptions()
     }
 
     for i, name in ipairs(expansionNames) do
-        args["expansion_" .. i] = {
+        local expansionIndex = i
+
+        args["expansion_" .. expansionIndex] = {
             type = "toggle",
             name = name,
-            desc = "Enable World Quest tracking for the " .. name .. "expansion",
+            desc = "Enable World Quest tracking for the " .. name .. " expansion",
             width = "normal",
-            order = 40 + i,
+            order = 40 + expansionIndex,
             get = function()
-                return WQR.db.profile.expansions[i]
+                return WQR.db.profile.expansions[expansionIndex]
             end,
             set = function(_, val)
-                WQR.db.profile.expansions[i] = val
+                WQR.db.profile.expansions[expansionIndex] = val
                 WQR:PopulateZoneList()
                 WQR:UpdateWorldQuestData()
             end,
@@ -357,16 +359,18 @@ function WQR:RebuildRewardFilterOptions()
     rewardsGroup.args = {}
 
     for i, reward in ipairs(self.config.rewards) do
-        rewardsGroup.args["rewardDivider_" .. i] = {
+        local rewardIndex = i
+
+        rewardsGroup.args["rewardDivider_" .. rewardIndex] = {
             type = "header",
             name = "",
-            order = i * 10
+            order = rewardIndex * 10
         }
-        rewardsGroup.args["reward_" .. i] = {
+        rewardsGroup.args["reward_" .. rewardIndex] = {
             type = "group",
             name = "",
             inline = true,
-            order = i * 10 + 1,
+            order = rewardIndex * 10 + 1,
             args = {
                 name = {
                     type = "description",
@@ -426,7 +430,7 @@ function WQR:RebuildRewardFilterOptions()
                     confirm = true,
                     confirmText = "Remove this reward filter?",
                     func = function()
-                        table.remove(WQR.db.profile.rewards, i)
+                        table.remove(WQR.db.profile.rewards, rewardIndex)
                         WQR:UpdateWorldQuestData()
                         WQR:RebuildRewardFilterOptions()
                         WQR.AceConfigRegistry:NotifyChange(ADDON_NAME)
@@ -566,7 +570,7 @@ function WQR:BuildCachedQuestOptions(questID, questInfo, questName)
                 set = function(_, value)
                     local x = tonumber(value)
 
-                    if not x then
+                    if not x or x < 0 or x > 100 then
                         return
                     end
 
@@ -593,7 +597,7 @@ function WQR:BuildCachedQuestOptions(questID, questInfo, questName)
                 set = function(_, value)
                     local y = tonumber(value)
 
-                    if not y then
+                    if not y or y < 0 or y > 100 then
                         return
                     end
 

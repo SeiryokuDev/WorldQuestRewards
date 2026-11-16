@@ -328,10 +328,16 @@ end
 
 function WQR:UpdateDisplay()
     if not self.frame then self:CreateDisplay() end
+
+    local text
+
     if not self.db.global.enabled then
-        self.content:SetText(self.disabledText)
+        text = self.disabledText
     else
-        local text = self:BuildDisplayText()
+        text = self:BuildDisplayText()
+    end
+
+    if self.content:GetText() ~= text then
         self.content:SetText(text)
     end
 

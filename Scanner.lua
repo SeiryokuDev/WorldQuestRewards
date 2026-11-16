@@ -6,6 +6,19 @@ local WQR = addonTable
 ---@type table
 DevTool = DevTool or {}
 
+local function InitQuestTable(data, continentID, mapID, questID)
+    local cont = data[continentID] or {}
+    data[continentID] = cont
+
+    local map = cont[mapID] or {}
+    cont[mapID] = map
+
+    local quest = map[questID] or {}
+    map[questID] = quest
+
+    return quest
+end
+
 function WQR:UpdateWorldQuestData()
     local data = {}
     local seen = {}
@@ -32,6 +45,33 @@ function WQR:UpdateWorldQuestData()
         end
     end
 
+    -- Preserve previous data for discovered quests
+    -- that could not be tracked during this scan.
+    for continentID, maps in pairs(self.data or {}) do
+        for mapID, quests in pairs(maps) do
+            for questID, rewards in pairs(quests) do
+                if seen[questID] then
+                    local newRewards = data[continentID]
+                        and data[continentID][mapID]
+                        and data[continentID][mapID][questID]
+
+                    if not newRewards then
+                        local questMap = InitQuestTable(
+                            data,
+                            continentID,
+                            mapID,
+                            questID
+                        )
+
+                        for rewardID, reward in pairs(rewards) do
+                            questMap[rewardID] = reward
+                        end
+                    end
+                end
+            end
+        end
+    end
+
     self.data = data
     self:UpdateDisplay()
     if self.config.debug then
@@ -41,30 +81,29 @@ function WQR:UpdateWorldQuestData()
     end
 end
 
+function WQR:ScheduleWorldQuestUpdate()
+    if self.updateTimer then
+        self.updateTimer:Cancel()
+    end
+
+    self.updateTimer = C_Timer.NewTimer(0.5, function()
+        self.updateTimer = nil
+        self:UpdateWorldQuestData()
+    end)
+end
+
 -- ============================================================================
 -- Scan a single quest
 -- ============================================================================
 
-local function InitQuestTable(data, continentID, mapID, questID)
-    local cont = data[continentID] or {}
-    data[continentID] = cont
-
-    local map = cont[mapID] or {}
-    cont[mapID] = map
-
-    local quest = map[questID] or {}
-    map[questID] = quest
-
-    return quest
-end
-
 function WQR:ScanQuest(continentID, mapID, questID, data)
-    if not GetQuestLink(questID) then return end
+    if not GetQuestLink(questID) then return false end
 
     -- --------------------------------------------------
     -- Item rewards
     -- --------------------------------------------------
-    local numItems = GetNumQuestLogRewards(questID)
+    local numItems = GetNumQuestLogRewards(questID) or 0
+
     for i = 1, numItems do
         local name, texture, count, _, _, itemID =
             GetQuestLogRewardInfo(i, questID)
@@ -135,6 +174,8 @@ function WQR:ScanQuest(continentID, mapID, questID, data)
             }
         end
     end
+
+    return true
 end
 
 function WQR:ActiveTasksInCurrentMap()

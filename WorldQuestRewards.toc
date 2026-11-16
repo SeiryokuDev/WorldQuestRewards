@@ -1,8 +1,8 @@
-## Interface: 120001
+## Interface: 120105
 ## Title: WorldQuestRewards
 ## Notes: Lists World Quests that offer a specific reward.
 ## Author: Seiryoku
-## Version: 1.0.0
+## Version: 1.0.1
 ## X-Curse-Project-ID: 1799432
 ## SavedVariables: WQRDB
 
